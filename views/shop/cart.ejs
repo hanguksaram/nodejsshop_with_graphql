@@ -4,4 +4,11 @@
 
 <body>
     <%- include('../includes/navigation.ejs') %>
+   
+    <main>
+        <%= cart.totalPrice %>
+        <% for (let prod of cart.products) { %>
+            <div><%= prod.title %></div>
+        <% } %> 
+    </main>
     <%- include('../includes/end.ejs') %>

@@ -51,13 +51,19 @@ main {
   color: #ffeb3b;
 }
 
+.centered { 
+  text-align: center;
+}
+
 .grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
   align-items: stretch;
 }
-
+a.btn {
+  text-decoration: none;
+}
 .card {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }

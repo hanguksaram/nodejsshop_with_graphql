@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Cart = require ("../models/cart")
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/add-product", {
@@ -24,9 +25,36 @@ exports.getProducts = (req, res, next) => {
     res.render("shop/product-list", {
       prods: products,
       pageTitle: "Shop",
-      path: "/products",
+      path: "/products"
     });
   });
+}
+
+exports.addProductToCart = (req, res, next) => {
+  const { productId } = req.params;
+  Cart.addProduct(productId)
+    .then(() => res.redirect('/'), error => res.status(400).send(error))
+  
+}
+
+exports.getProduct = (req, res, next) => {
+    const { productId } = req.params;
+    Product.findById(productId).then(data => {
+      if (data) {
+        res.render("shop/product-detail", {
+          path: "/product-detail",
+          pageTitle: "Product Detail",
+          ...data
+        });
+      } else {
+        res
+          .status(404)
+          .render("404", { pageTitle: "Page Not Found", path: "404" });
+      }
+    }, error => {
+      res.status(500).send(error)
+    } );
+  };
 
   // Product.fetchAllCb(products => {
   //     res.render('shop', {
@@ -38,28 +66,43 @@ exports.getProducts = (req, res, next) => {
   //       productCSS: true
   //     });
   //   })
-};
+
 
 exports.getIndex = (req, res, next) => {
   Product.fetchAll().then(products => {
     res.render("shop/product-list", {
       prods: products,
       pageTitle: "Shop",
-      path: "/",
+      path: "/"
     });
   });
 };
 
 exports.getCart = (req, res, next) => {
-  res.render('shop/cart', {
-    path: '/cart',
-    pageTitle: 'Your Cart'
-  })
-}
+  const cart = Cart.getCart()
+  console.log(cart)
+  if (cart) {
+    res.render("shop/cart", {
+      path: "/cart",
+      pageTitle: "Your Cart",
+      cart
+    })
+  } else {
+    res.redirect('/products')
+  }
+  
+};
 
-exports.getCheckout = ( req, res, next ) => {
+exports.getOrders = (req, res, next) => {
+  res.render("shop/orders", {
+    path: "/orders",
+    pageTitle: "Your Orders"
+  });
+};
+
+exports.getCheckout = (req, res, next) => {
   res.render("shop/checkout", {
     pageTitle: "Shop",
-    path: "/",
+    path: "/"
   });
-} 
+};

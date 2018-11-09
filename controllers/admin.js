@@ -12,8 +12,8 @@ exports.getAddProduct = (req, res, next) => {
 }
 
 exports.postAddProduct = (req, res, next) => {
-    const { title } = req.body
-    const product = new Product(title)
+    const { title, imageUrl, price, description } = req.body
+    const product = new Product(title, imageUrl, description, price)
     //fully functional model object pattern, repo or service layer dosnt exist
     product.save();
     res.redirect('/');
@@ -28,3 +28,7 @@ exports.getProducts = (req, res, next) => {
       });
     });
   };
+
+exports.removeProduct = (req, res, next) => {
+
+}
