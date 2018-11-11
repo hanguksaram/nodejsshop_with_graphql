@@ -1,0 +1,8 @@
+{
+    "db" : {
+        "host": "localhost",
+        "schema": "node-complete",
+        "user": "newuser",
+        "password": "password"
+    }
+}

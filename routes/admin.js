@@ -20,7 +20,7 @@ router.post('/put-product', adminController.putProduct)
 
 router.get('/edit-product/:productId', adminController.getEditProduct)
 
-
+router.post('/delete-product', adminController.removeProduct)
 
 module.exports = router;
 

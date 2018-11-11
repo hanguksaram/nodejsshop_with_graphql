@@ -16,7 +16,7 @@ module.exports = class FileRepo {
 
   input() {
     return new Promise((resolve, reject) => {
-      fs.readFile(path, (error, data) => {
+      fs.readFile(this.filePath, (error, data) => {
         if (error) reject(error);
         else { 
             resolve(data.length > 0 ? JSON.parse(data) : []);

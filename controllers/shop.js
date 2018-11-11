@@ -1,5 +1,5 @@
 const Product = require("../models/product");
-const Cart = require ("../models/cart")
+const Cart = require("../models/cart");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/add-product", {
@@ -28,18 +28,20 @@ exports.getProducts = (req, res, next) => {
       path: "/products"
     });
   });
-}
+};
 
 exports.addProductToCart = (req, res, next) => {
   const { productId } = req.params;
-  Cart.addProduct(productId)
-    .then(() => res.redirect('/'), error => res.status(400).send(error))
-  
-}
+  Cart.addProduct(productId).then(
+    () => res.redirect("/"),
+    error => res.status(400).send(error)
+  );
+};
 
 exports.getProduct = (req, res, next) => {
-    const { productId } = req.params;
-    Product.findById(productId).then(data => {
+  const { productId } = req.params;
+  Product.findById(productId).then(
+    data => {
       if (data) {
         res.render("shop/product-detail", {
           path: "/product-detail",
@@ -51,22 +53,23 @@ exports.getProduct = (req, res, next) => {
           .status(404)
           .render("404", { pageTitle: "Page Not Found", path: "404" });
       }
-    }, error => {
-      res.status(500).send(error)
-    } );
-  };
+    },
+    error => {
+      res.status(500).send(error);
+    }
+  );
+};
 
-  // Product.fetchAllCb(products => {
-  //     res.render('shop', {
-  //       prods: products,
-  //       pageTitle: 'Shop',
-  //       path: '/',
-  //       hasProducts: products.length > 0,
-  //       activeShop: true,
-  //       productCSS: true
-  //     });
-  //   })
-
+// Product.fetchAllCb(products => {
+//     res.render('shop', {
+//       prods: products,
+//       pageTitle: 'Shop',
+//       path: '/',
+//       hasProducts: products.length > 0,
+//       activeShop: true,
+//       productCSS: true
+//     });
+//   })
 
 exports.getIndex = (req, res, next) => {
   Product.fetchAll().then(products => {
@@ -76,22 +79,40 @@ exports.getIndex = (req, res, next) => {
       path: "/"
     });
   });
-};
+};  
 
 exports.getCart = (req, res, next) => {
-  const cart = Cart.getCart()
-  console.log(cart)
+  const cart = Cart.getCart();
+  console.log(cart);
   if (cart) {
     res.render("shop/cart", {
       path: "/cart",
       pageTitle: "Your Cart",
       cart
-    })
+    });
   } else {
-    res.redirect('/products')
+    res.redirect("/products");
   }
-  
 };
+
+exports.removeProductFromCart = (req, res, next) => {
+  const { productId } = req.body;
+    if (Cart.deleteProductFromCart(productId)) {
+    res.redirect("/cart");
+  } else {
+    res.status(404).render("404", { pageTitle: "Page Not Found", path: "404" });
+  }
+};
+
+exports.changeProductCount = (req, res, next) => {
+  const { increment, productId } = req.query
+  if (Cart.changeProductCountInCart(increment, productId)) {
+    res.redirect("/cart");
+  } else {
+    res.status(404).render("404", { pageTitle: "Page Not Found", path: "404" });
+  }
+};
+
 
 exports.getOrders = (req, res, next) => {
   res.render("shop/orders", {

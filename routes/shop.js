@@ -18,10 +18,16 @@ router.get('/products/:productId', shopController.getProduct )
 
 router.get('/cart', shopController.getCart)
 
-router.post('/cart/:productId', shopController.addProductToCart)
-
 router.get('/checkout', shopController.getCheckout)
 
 router.get('/orders', shopController.getOrders)
+
+router.post('/cart/delete-product', shopController.removeProductFromCart)
+
+router.get('/cart/change-count', shopController.changeProductCount)
+
+router.post('/cart/:productId', shopController.addProductToCart)
+
+
 
 module.exports = router;

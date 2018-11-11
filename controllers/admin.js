@@ -9,22 +9,14 @@ exports.getAddProduct = (req, res, next) => {
 };
 //сознателбный бэд дизайн один экшн на креаэйт и апдейт и раскратие логики модели в колбэках экщна ну такое  прям)
 exports.putProduct = (req, res, next) => {
-  const { id = 0, title, imageUrl, price, description } = req.body;
+  const { id = -1, title, imageUrl, price, description } = req.body;
   const product = new Product(id, title, imageUrl, description, price);
   //fully functional model object pattern, repo or service layer dosnt exist
-  product.save(
-    id === 0 ? (products, product) => {
-    products.push(product)
-  } : (products, product) => {
-    const prodIndex = products.findIndex(prod => prod.id == product.id)
-      if (prodIndex != -1) {
-        products[prodIndex] = product
-      }
-  });
+  product.save(product);
   res.redirect("/");
 };
 
-exports.getProducts = (req, res, next) => { 
+exports.getProducts = (req, res, next) => {
   Product.fetchAll().then(products => {
     res.render("admin/products", {
       prods: products,
@@ -35,7 +27,7 @@ exports.getProducts = (req, res, next) => {
 };
 
 // exports.postEditProduct = (req, res, next) => {
-//   const 
+//   const
 // }
 
 exports.getEditProduct = (req, res, next) => {
@@ -51,7 +43,7 @@ exports.getEditProduct = (req, res, next) => {
           .status(404)
           .render("404", { pageTitle: "Page Not Found", path: "404" });
       } else {
-        console.log(product)
+        console.log(product);
         res.render("admin/edit-product", {
           pageTitle: "Edit Product",
           path: "/admin/edit-product",
@@ -66,4 +58,20 @@ exports.getEditProduct = (req, res, next) => {
   );
 };
 
-exports.removeProduct = (req, res, next) => {};
+exports.removeProduct = (req, res, next) => {
+  const { productId } = req.body;
+  Product.deleteProduct(id).then(
+    data => {
+      console.log(data)
+      if (data) {
+        res.redirect("/admin/products");
+      } else {
+        res.status(404).render("404", {
+          pageTitle: "Page Not Found",
+          path: "404"
+        });
+      }
+    },
+    error => res.status(500).send(error)
+  );
+};

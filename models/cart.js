@@ -37,4 +37,27 @@ module.exports = class Cart {
       return false;
     }
   }
+  static changeProductCountInCart(increment, productId) {
+    const indx = simpleCartInMemoryStorage.findIndex(el => el.product.id == productId)
+    if (indx != -1) {
+      simpleCartInMemoryStorage[indx].count += Number(increment)
+      if (simpleCartInMemoryStorage[indx].count <= 0) {
+        simpleCartInMemoryStorage.splice(indx, 1)
+        console.log(simpleCartInMemoryStorage )
+      }
+      return true
+    }
+    return false 
+  }
+
+  static deleteProductFromCart(productId) {
+    const indx = simpleCartInMemoryStorage.findIndex(el => el.product.id == productId)
+
+    if (indx != -1) {
+      simpleCartInMemoryStorage.splice(indx, 1)
+      return true
+    } else {
+      return false
+    }
+  }
 };

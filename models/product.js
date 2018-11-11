@@ -4,14 +4,12 @@ const path = require("path").join(
   "products.json"
 );
 
-
 const fs = require("fs");
 const Cache = require("../models/simpleCache");
-const FileRepo = require('../util/fileRepo')
-
+const FileRepo = require("../util/fileRepo");
 
 const cache = new Cache();
-const fileRepo = new FileRepo(path)
+const fileRepo = new FileRepo(path);
 
 const getProductsFromFile = cb => {
   fs.readFile(path, (err, data) => {
@@ -25,45 +23,59 @@ module.exports = class Product {
     this.imageUrl = imageUrl;
     this.description = description;
     this.price = price;
-    this.id = (id == 0) ? Math.ceil(Math.random() * 1000000): id
+    this.id = id;
   }
 
-  save(biConsumer) {
+  save() {
     fileRepo.input().then(data => {
-      if (data.length) > 0
-    })
-    fileRepo.output
-    getProductsFromFile(products => {
-      biConsumer(products, this) 
-      .then(() => cache.setBook(this), error => console.log(error));
+        if (this.id == -1) {
+          this.id = Math.ceil(Math.random() * 1000000);
+          data.push(this);
+          console.log("pushe", this);
+        } else {
+          const productIndex = data.findIndex(prod => this.id == prod.id);
+          if (productIndex != -1) {
+            data[productIndex] = this;
+          }
+        }
+      
+      fileRepo.output(data).then(() => cache.setBook(this));
     });
   }
 
   //promise way
   static fetchAll() {
-    console.log(cache.cache);
-    return new Promise((resolve, reject) => {
-      fs.readFile(path, (err, data) => {
-        resolve(!err && data.length > 0 ? JSON.parse(data) : []);
-      });
-    });
+    return fileRepo.input();
   }
   static findById(productId) {
     const book = cache.book(productId);
     if (book.exist) {
       return Promise.resolve(book.book);
     } else {
-      ;
+      return fileRepo.input().then(data => {
+        const prod = data.find(prod => productId == prod.id);
+        if (prod) {
+          cache.setBook(prod);
+          return prod;
+        } else {
+          return null;
+        }
+      });
     }
   }
-  //callback way
-  static fetchAllCb(cb) {
-    getProductsFromFile(cb);
-  };
+
 
   static deleteProduct(product) {
-    getProductsFromFile(products => {
-      products = products.filter(prod => prod.id != product.id)
+    return fileRepo.input().then(data => {
+      const dataChanged = data.filter(prod => prod.id != product);
+      if (dataChanged.length != data.length) {
+        return fileRepo.output(dataChanged).then(() => {
+          cache.deleteBook(product);
+          return true
+        })
+      } else {
+        return false 
+      }
     })
   }
-};
+}
