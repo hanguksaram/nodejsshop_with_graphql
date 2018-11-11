@@ -27,7 +27,7 @@ exports.getProducts = (req, res, next) => {
       pageTitle: "Shop",
       path: "/products"
     });
-  });
+  }, error => res.status(500).send(error));
 };
 
 exports.addProductToCart = (req, res, next) => {
@@ -72,13 +72,17 @@ exports.getProduct = (req, res, next) => {
 //   })
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll().then(products => {
-    res.render("shop/product-list", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/"
-    });
-  });
+  Product.fetchAll();
+  res.redirect('/shop')
+
+  // Product.fetchAll().then(products => {
+  //   res.render("shop/product-list", {
+  //     prods: products,
+  //     pageTitle: "Shop", 
+  //     path: "/"
+  //   });
+  // },
+  // error => res.status(500).send(error));
 };  
 
 exports.getCart = (req, res, next) => {

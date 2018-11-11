@@ -1,21 +1,10 @@
-const path = require("path").join(
-  require("path").dirname(process.mainModule.filename),
-  "data",
-  "products.json"
-);
 
-const fs = require("fs");
 const Cache = require("../models/simpleCache");
-const FileRepo = require("../util/fileRepo");
 
+const SqlRepo = require('./sqlRepo');
 const cache = new Cache();
-const fileRepo = new FileRepo(path);
 
-const getProductsFromFile = cb => {
-  fs.readFile(path, (err, data) => {
-    cb(!err && data.length > 0 ? JSON.parse(data) : []);
-  });
-};
+
 
 module.exports = class Product {
   constructor(id, title, imageUrl, description, price) {
@@ -27,9 +16,17 @@ module.exports = class Product {
   }
 
   save() {
+    if (this.id == -1) {
+      SqlRepo.create(this)
+    } else {
+      this.id = Math.ceil(Math.random() * 1000000);
+      SqlRepo.update()
+    }
+      
+    SqlRepo.update(this)
     fileRepo.input().then(data => {
         if (this.id == -1) {
-          this.id = Math.ceil(Math.random() * 1000000);
+          
           data.push(this);
           console.log("pushe", this);
         } else {
@@ -45,7 +42,9 @@ module.exports = class Product {
 
   //promise way
   static fetchAll() {
-    return fileRepo.input();
+    const [findAll] = SqlRepo.sqlHandlers
+    console.log(findAll().then(data => data).then(data => console.log(data)))
+    return findAll()
   }
   static findById(productId) {
     const book = cache.book(productId);
