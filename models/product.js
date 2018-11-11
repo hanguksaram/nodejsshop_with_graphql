@@ -42,9 +42,19 @@ module.exports = class Product {
 
   //promise way
   static fetchAll() {
-    const [findAll] = SqlRepo.sqlHandlers
-    console.log(findAll().then(data => data).then(data => console.log(data)))
-    return findAll()
+    const fetchAllHandler = SqlRepo.sqlHandlers.find(hn => hn.key == 'selectAll');
+    if (fetchAllHandler) {
+      SqlRepo.sqlEmitter.on(fetchAllHandler.key, (data) => {
+        console.log(data)
+      })
+      fetchAllHandler.fn()
+      
+     
+    }
+    
+    // const [findAll] = SqlRepo.sqlHandlers
+    // console.log(findAll().then(data => data).then(data => console.log(data)))
+    // return findAll()
   }
   static findById(productId) {
     const book = cache.book(productId);
