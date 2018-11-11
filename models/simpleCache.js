@@ -10,4 +10,7 @@ module.exports = class Cache {
     setBook(book) {
         this.cache.set(book.id, book)
     }
+    deleteBook(book) {
+        this.cache.delete(book.id)
+    }
 }

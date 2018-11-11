@@ -1,11 +1,17 @@
-const fs = require("fs");
-const Cache = require("../models/simpleCache");
 const path = require("path").join(
   require("path").dirname(process.mainModule.filename),
   "data",
   "products.json"
 );
+
+
+const fs = require("fs");
+const Cache = require("../models/simpleCache");
+const FileRepo = require('../util/fileRepo')
+
+
 const cache = new Cache();
+const fileRepo = new FileRepo(path)
 
 const getProductsFromFile = cb => {
   fs.readFile(path, (err, data) => {
@@ -14,24 +20,22 @@ const getProductsFromFile = cb => {
 };
 
 module.exports = class Product {
-  constructor(title, imageUrl, description, price) {
+  constructor(id, title, imageUrl, description, price) {
     this.title = title;
     this.imageUrl = imageUrl;
     this.description = description;
     this.price = price;
-    this.id = Math.ceil(Math.random() * 1000000);
+    this.id = (id == 0) ? Math.ceil(Math.random() * 1000000): id
   }
 
-  save() {
+  save(biConsumer) {
+    fileRepo.input().then(data => {
+      if (data.length) > 0
+    })
+    fileRepo.output
     getProductsFromFile(products => {
-      products.push(this);
-      new Promise((resolve, reject) => {
-        resolve(
-          fs.writeFile(path, JSON.stringify(products), err => {
-            reject(err);
-          })
-        );
-      }).then(() => cache.setBook(this), error => console.log(error));
+      biConsumer(products, this) 
+      .then(() => cache.setBook(this), error => console.log(error));
     });
   }
 
@@ -49,18 +53,17 @@ module.exports = class Product {
     if (book.exist) {
       return Promise.resolve(book.book);
     } else {
-      return new Promise((resolve, reject) => {
-        fs.readFile(path, (error, data) => {
-          if (error) reject(error);
-          else {
-            resolve(JSON.parse(data).find(book => book.id == productId));
-          }
-        });
-      });
+      ;
     }
   }
   //callback way
   static fetchAllCb(cb) {
     getProductsFromFile(cb);
+  };
+
+  static deleteProduct(product) {
+    getProductsFromFile(products => {
+      products = products.filter(prod => prod.id != product.id)
+    })
   }
 };
