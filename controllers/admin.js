@@ -75,3 +75,5 @@ exports.removeProduct = (req, res, next) => {
     error => res.status(500).send(error)
   );
 };
+
+exports.dispatchDataToController

@@ -3,6 +3,7 @@ module.exports = class Cache {
         this.cache = new Map()
     }
     book(id) {
+        id = Number(id)
         return this.cache.has(id) 
             ? {book: this.cache.get(id), exist: true } : 
         {exist: false}
