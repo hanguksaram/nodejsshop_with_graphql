@@ -21,13 +21,16 @@ exports.postAddProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   // //promise way
-  Product.fetchAll().then(products => {
-    res.render("shop/product-list", {
-      prods: products,
-      pageTitle: "Shop",
-      path: "/products"
-    });
-  }, error => res.status(500).send(error));
+  Product.findAll().then(
+    products => {
+      res.render("shop/product-list", {
+        prods: products,
+        pageTitle: "All Produc",
+        path: "/products"
+      });
+    },
+    error => res.status(500).send(error)
+  );
 };
 
 exports.addProductToCart = (req, res, next) => {
@@ -40,13 +43,17 @@ exports.addProductToCart = (req, res, next) => {
 
 exports.getProduct = (req, res, next) => {
   const { productId } = req.params;
+  //anotherApproach
+  // Product.findAll({ where: { id: productId }})
+  //   .then(products => console.log(products[0]))
   Product.findById(productId).then(
     data => {
-      if (data) {
+      if (data.dataValues) {
+        console.log(data, "DATA")
         res.render("shop/product-detail", {
           path: "/product-detail",
           pageTitle: "Product Detail",
-          ...data
+          ...data.dataValues
         });
       } else {
         res
@@ -72,36 +79,38 @@ exports.getProduct = (req, res, next) => {
 //   })
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll();
-  res.redirect('/shop')
+  Product.findAll().then(
+    products => {
+      res.render("shop/product-list", {
+        prods: products,
+        pageTitle: "Shop",
+        path: "/"
+      });
+    },
+    error => res.status(500).send(error)
+  );
+};
 
-  // Product.fetchAll().then(products => {
-  //   res.render("shop/product-list", {
-  //     prods: products,
-  //     pageTitle: "Shop", 
-  //     path: "/"
+exports.getCart = async (req, res, next) => {
+  console.log(req.user.cart)
+  const cart = await req.user.getCart()
+  if (cart) console.log(cart)
+  // const cart = Cart.getCart();
+  // console.log(cart);
+  // if (cart) {
+  //   res.render("shop/cart", {
+  //     path: "/cart",
+  //     pageTitle: "Your Cart",
+  //     cart
   //   });
-  // },
-  // error => res.status(500).send(error));
-};  
-
-exports.getCart = (req, res, next) => {
-  const cart = Cart.getCart();
-  console.log(cart);
-  if (cart) {
-    res.render("shop/cart", {
-      path: "/cart",
-      pageTitle: "Your Cart",
-      cart
-    });
-  } else {
-    res.redirect("/products");
-  }
+  // } else {
+  //   res.redirect("/products");
+  // }
 };
 
 exports.removeProductFromCart = (req, res, next) => {
   const { productId } = req.body;
-    if (Cart.deleteProductFromCart(productId)) {
+  if (Cart.deleteProductFromCart(productId)) {
     res.redirect("/cart");
   } else {
     res.status(404).render("404", { pageTitle: "Page Not Found", path: "404" });
@@ -109,14 +118,13 @@ exports.removeProductFromCart = (req, res, next) => {
 };
 
 exports.changeProductCount = (req, res, next) => {
-  const { increment, productId } = req.query
+  const { increment, productId } = req.query;
   if (Cart.changeProductCountInCart(increment, productId)) {
     res.redirect("/cart");
   } else {
     res.status(404).render("404", { pageTitle: "Page Not Found", path: "404" });
   }
 };
-
 
 exports.getOrders = (req, res, next) => {
   res.render("shop/orders", {
