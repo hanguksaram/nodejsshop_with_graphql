@@ -1,5 +1,7 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const Order = require("../models/order");
+const genericRequestHandler = require("../util/extensions");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/add-product", {
@@ -20,7 +22,7 @@ exports.postAddProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  // //promise way
+  //req.user.getCart
   Product.findAll().then(
     products => {
       res.render("shop/product-list", {
@@ -35,9 +37,28 @@ exports.getProducts = (req, res, next) => {
 
 exports.addProductToCart = (req, res, next) => {
   const { productId } = req.params;
-  Cart.addProduct(productId).then(
-    () => res.redirect("/"),
-    error => res.status(400).send(error)
+  const user = req.user;
+  genericRequestHandler(
+    async () => {
+      const cart = await user.getCart();
+      if (cart) {
+        let product = await cart.getProducts({ where: { id: productId } });
+        if (product.length > 0) {
+          product = product[0];
+          let newQuantity = product.cartItem.quantity;
+          ++newQuantity;
+          cart.addProduct(product, { through: { quantity: newQuantity } });
+        } else {
+          product = await Product.findByPk(productId);
+          if (product) {
+            await cart.addProduct(product, { through: { quantity: 1 } });
+          }
+        }
+      }
+    },
+    () => res.redirect("/products"),
+    res,
+    () => false
   );
 };
 
@@ -49,7 +70,7 @@ exports.getProduct = (req, res, next) => {
   Product.findById(productId).then(
     data => {
       if (data.dataValues) {
-        console.log(data, "DATA")
+        console.log(data, "DATA");
         res.render("shop/product-detail", {
           path: "/product-detail",
           pageTitle: "Product Detail",
@@ -91,30 +112,50 @@ exports.getIndex = (req, res, next) => {
   );
 };
 
-exports.getCart = async (req, res, next) => {
-  console.log(req.user.cart)
-  const cart = await req.user.getCart()
-  if (cart) console.log(cart)
-  // const cart = Cart.getCart();
-  // console.log(cart);
-  // if (cart) {
-  //   res.render("shop/cart", {
-  //     path: "/cart",
-  //     pageTitle: "Your Cart",
-  //     cart
-  //   });
-  // } else {
-  //   res.redirect("/products");
-  // }
+exports.getCart = (req, res, next) => {
+  genericRequestHandler(
+    async () => {
+      const cart = await req.user.getCart();
+      if (cart) {
+        const productsInCart = await cart.getProducts();
+        if (productsInCart.length > 0) {
+          console.log(productsInCart);
+          return productsInCart;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    },
+    data => {
+      res.render("shop/cart", {
+        path: "/cart",
+        pageTitle: "Your Cart",
+        productsInCart: data
+      });
+    },
+    res,
+    () => true
+  );
 };
 
 exports.removeProductFromCart = (req, res, next) => {
   const { productId } = req.body;
-  if (Cart.deleteProductFromCart(productId)) {
-    res.redirect("/cart");
-  } else {
-    res.status(404).render("404", { pageTitle: "Page Not Found", path: "404" });
-  }
+  genericRequestHandler(
+    async () => {
+      const cart = await req.user.getCart();
+      if (cart) {
+        const products = await cart.getProducts({ where: { id: productId } });
+        if (products.length > 0) {
+          await products[0].cartItem.destroy();
+        }
+      }
+    },
+    () => res.redirect("/products"),
+    res,
+    () => false
+  );
 };
 
 exports.changeProductCount = (req, res, next) => {
@@ -127,10 +168,19 @@ exports.changeProductCount = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  res.render("shop/orders", {
-    path: "/orders",
-    pageTitle: "Your Orders"
-  });
+  genericRequestHandler(
+    async () => {
+      return req.user.getOrders({include: ['products']});
+    },
+    data => {
+      console.log(data)
+      res.render("shop/orders", {
+        path: "/orders",
+        pageTitle: "Your Orders",
+        orders: data
+      });
+    }, res, () => true
+  );
 };
 
 exports.getCheckout = (req, res, next) => {
@@ -138,4 +188,30 @@ exports.getCheckout = (req, res, next) => {
     pageTitle: "Shop",
     path: "/"
   });
+};
+
+exports.postOrder = (req, res, next) => {
+  genericRequestHandler(
+    async () => {
+      const cart = await req.user.getCart();
+      if (cart) {
+        const [products, order] = await Promise.all([
+          cart.getProducts(),
+          req.user.createOrder()
+        ]);
+        order.addProducts(
+          products.map(product => {
+            product.orderItem = { quantity: product.cartItem.quantity };
+            return product;
+          })
+        );
+        cart.setProducts(null);
+      } else {
+        return null;
+      }
+    },
+    () => res.redirect("/orders"),
+    res,
+    () => false
+  );
 };

@@ -28,6 +28,6 @@ router.get('/cart/change-count', shopController.changeProductCount)
 
 router.post('/cart/:productId', shopController.addProductToCart)
 
-
+router.post('/create-order', shopController.postOrder)
 
 module.exports = router;

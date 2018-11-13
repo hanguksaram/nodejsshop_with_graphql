@@ -6,14 +6,15 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <% if (cart.products.length > 0) { %>
-            <div><%= cart.count %></div>
+        <% if (productsInCart.length > 0) { %>
+            <div><%= productsInCart.length %></div>
             <div class="grid">
-                <% for (let product of cart.products) { %>
+                <% for (let product of productsInCart) { %>
                     <% if (product) { %>
                     <article class="card product-item">
                         <header class="card__header">
                             <h1 class="product__title"><%= product.title %></h1>
+                            <h1><%= product.cartItem.quantity %></h1>
                         </header>
                         <div class="card__image">
                             <img src="<%= product.imageUrl %>"
@@ -40,6 +41,12 @@
                     <% } %>
                 <% } %>
             </div>
+            <div class="centered">
+                <form action="/create-order" method="POST">
+                    <button type="submit" class="btn">Order Now!</button>
+                </form>
+            </div>
+            
         <% } else { %>
             <h1>No Products Found!</h1>
         <% } %>
